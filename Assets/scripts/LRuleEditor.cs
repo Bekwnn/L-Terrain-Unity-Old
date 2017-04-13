@@ -13,6 +13,18 @@ public class LRuleEditor : EditorWindow
     {
         if (TE.lSystem == null) return;
 
+        GUILayout.BeginHorizontal();
+
+        GUILayout.BeginVertical();
+        
+        string[] options = new string[TE.lSystem.definedSymbols.Count];
+        for (int i = 0; i < TE.lSystem.definedSymbols.Count; ++i)
+        {
+            options[i] = TE.lSystem.definedSymbols[i].name;
+        }
+
+        TE.brushIndex = EditorGUILayout.Popup(TE.brushIndex, options);
+
         foreach (LRule rule in TE.lSystem.rules)
         {
             bool selected = EditorGUILayout.Toggle(new GUIContent(rule.name), (selectedRule == rule));
@@ -20,16 +32,31 @@ public class LRuleEditor : EditorWindow
                 selectedRule = rule;
         }
 
+        bool makeNewRule = GUILayout.Button("+ Add New Rule");
+        if (makeNewRule) MakeNewRule();
+
+        bool deleteCurrent = GUILayout.Button("- Delete Selected Rule");
+        if (deleteCurrent) DeleteRule();
+
+        GUILayout.EndVertical();
+
         if (selectedRule != null)
         {
+            GUILayout.BeginVertical();
+
             GUILayout.BeginHorizontal();
 
             GUILayout.Label("Matches symbol ", GUILayout.ExpandWidth(false));
 
-            if (selectedRule.matchVal.tex != null)
-                GUILayout.Button(selectedRule.matchVal.tex, SE.buttonOpts);
-            else
-                GUILayout.Button(selectedRule.matchVal.symbol.ToString(), SE.buttonOpts);
+            GUIContent buttonContent;
+            if (selectedRule.matchVal.tex != null) buttonContent = new GUIContent(selectedRule.matchVal.tex, selectedRule.matchVal.name);
+            else buttonContent = new GUIContent(selectedRule.matchVal.symbol.ToString(), selectedRule.matchVal.name);
+            bool tilePressed = GUILayout.Button(buttonContent, SE.buttonOpts);
+
+            if (tilePressed)
+            {
+                selectedRule.matchVal = TE.lSystem.definedSymbols[TE.brushIndex];
+            }
 
             GUILayout.Label(" and replaces with:");
 
@@ -42,23 +69,22 @@ public class LRuleEditor : EditorWindow
                 Rect horiR = EditorGUILayout.BeginHorizontal();
                 for (int j = 0; j < 5; ++j)
                 {
-                    //use texture if has one, use symbol if not
-                    if (selectedRule.replacementVals[i, j].tex != null)
-                        GUILayout.Button(selectedRule.replacementVals[i, j].tex, SE.buttonOpts);
-                    else
-                        GUILayout.Button(selectedRule.replacementVals[i, j].symbol.ToString(), SE.buttonOpts);
+                    GUIContent buttonContent2;
+                    if (selectedRule.replacementVals[i, j].tex != null) buttonContent2 = new GUIContent(selectedRule.replacementVals[i, j].tex, selectedRule.replacementVals[i,j].name);
+                    else buttonContent2 = new GUIContent(selectedRule.replacementVals[i, j].symbol.ToString(), selectedRule.replacementVals[i, j].name);
+                    bool tilePressed2 = GUILayout.Button(buttonContent2, SE.buttonOpts);
+
+                    if (tilePressed2)
+                    {
+                        selectedRule.replacementVals[i, j] = TE.lSystem.definedSymbols[TE.brushIndex];
+                    }
                 }
                 EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.EndVertical();
+            EditorGUILayout.EndVertical();
         }
-
-        bool makeNewRule = GUILayout.Button("+ Add New Rule");
-        if (makeNewRule) MakeNewRule();
-
-        bool deleteCurrent = GUILayout.Button("- Delete Selected Rule");
-        if (deleteCurrent) DeleteRule();
     }
 
     void MakeNewRule()

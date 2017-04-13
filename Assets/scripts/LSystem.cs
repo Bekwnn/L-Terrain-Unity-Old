@@ -11,12 +11,14 @@ public class LSystem : MonoBehaviour {
 
     public List<LRule> rules;
     public List<LSymbol> definedSymbols;
+    public List<LPatch> definedPatches;
     public LSymbol[][,] systemString;
 
 	// Use this for initialization
 	void Reset () {
         rules = new List<LRule>();
         definedSymbols = new List<LSymbol>();
+        definedPatches = new List<LPatch>();
 
         LSymbol plains = new LSymbol('p', "plains");
         LSymbol hills = new LSymbol('h', "hills");
@@ -25,36 +27,38 @@ public class LSystem : MonoBehaviour {
         definedSymbols.Add(plains);
         definedSymbols.Add(hills);
         definedSymbols.Add(ocean);
+        
+        LSymbol grass = new LSymbol('g', "grass");
+        LSymbol sand = new LSymbol('s', "sand");
+        LSymbol beach = new LSymbol('b', "beach");
+
+        definedSymbols.Add(grass);
+        definedSymbols.Add(beach);
+        definedSymbols.Add(sand);
 
         systemString = new LSymbol[1][,];
         systemString[0] = new LSymbol[3,3]{
-            {ocean,  plains, hills },
-            {ocean,  plains, hills },
-            {ocean,  plains, hills }
+            {ocean,  beach,  hills },
+            {ocean,  beach,  hills },
+            {ocean,  beach,  hills }
         };
 
-        LSymbol grass = new LSymbol('g', "grass");
-        LSymbol cliff = new LSymbol('c', "cliff");
-
-        definedSymbols.Add(grass);
-        definedSymbols.Add(cliff);
 
         LRule plainsToGrass = LRule.CreatePropegateRule(plains, grass);
         rules.Add(plainsToGrass);
         plainsToGrass.name = "Pprgate Plains > Grass";
-
-
-        LSymbol[,] hillRepl = new LSymbol[5, 5]{
-            { grass, cliff, grass, cliff, cliff },
-            { grass, cliff, grass, grass, grass },
-            { grass, cliff, cliff, grass, grass },
-            { grass, grass, grass, cliff, grass },
-            { grass, cliff, grass, cliff, grass }
+        
+        LSymbol[,] beachRepl = new LSymbol[5, 5]{
+            { ocean, sand, sand, grass, grass },
+            { ocean, sand, sand, grass, grass },
+            { ocean, ocean, sand, grass, grass },
+            { ocean, ocean, sand, sand, grass },
+            { ocean, sand, sand, grass, grass }
         };
-        LRule detailHills = LRule.CreateRule(hills, hillRepl);
-        detailHills.name = "Detail Hills";
-        rules.Add(detailHills);
-	}
+        LRule detailBeach = LRule.CreateRule(beach, beachRepl);
+        detailBeach.name = "Detail Beach";
+        rules.Add(detailBeach);
+    }
 
     public LSymbol[,] IterateLString(LSymbol[,] source)
     {
@@ -92,6 +96,18 @@ public class LSystem : MonoBehaviour {
 
         //if no match found, create a rule to propegate toMatch (default behavior)
         return LRule.CreatePropegateRule(toMatch, toMatch);
+    }
+
+    public LPatch GetLPatchMatch(LSymbol toMatch)
+    {
+        foreach (LPatch patch in definedPatches)
+        {
+            if (toMatch == patch.matchVal)
+                return patch;
+        }
+
+        //if no match found, create a new patch
+        return new LPatch();
     }
 }
 
@@ -140,4 +156,14 @@ public class LRule
     public string name;
     public LSymbol matchVal;
     public LSymbol[,] replacementVals;
+}
+
+public class LPatch
+{
+    public string name;
+    public LSymbol matchVal;
+    public float minHeight;
+    public float maxHeight;
+    public GameObject prefab; //TODO: change into list of procedural prefab parameters
+    public Texture tex;
 }

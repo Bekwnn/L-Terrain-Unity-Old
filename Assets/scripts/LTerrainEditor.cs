@@ -9,6 +9,7 @@ public class LTerrainEditor : EditorWindow
     public static LSystem lSystem; //currently selected LSystem, shared by LSymbolEditor and LRuleEditor
     Vector2 scrollPos;
     int selectedLoD;
+    public static int brushIndex = 0;
 
     // Add menu item named "My Window" to the Window menu
     [MenuItem("Window/L Terrain Editor")]
@@ -18,6 +19,7 @@ public class LTerrainEditor : EditorWindow
         EditorWindow.GetWindow<LTerrainEditor>();
         EditorWindow.GetWindow<LRuleEditor>(typeof(LTerrainEditor));
         EditorWindow.GetWindow<LSymbolEditor>(typeof(LTerrainEditor));
+        EditorWindow.GetWindow<LPatchEditor>(typeof(LTerrainEditor));
     }
 
     void OnGUI()
@@ -27,8 +29,14 @@ public class LTerrainEditor : EditorWindow
         EditorGUILayout.BeginHorizontal();
 
         EditorGUILayout.BeginVertical();
-        bool genNew = GUILayout.Button("+ Gen New LoD From Selected");
-        if (genNew) GenFromSelectedLoD();
+
+        string[] options = new string[lSystem.definedSymbols.Count];
+        for (int i = 0; i < lSystem.definedSymbols.Count; ++i)
+        {
+            options[i] = lSystem.definedSymbols[i].name;
+        }
+
+        brushIndex = EditorGUILayout.Popup(brushIndex, options);
 
         for (int i = 0; i < lSystem.systemString.Length; ++i)
         {
@@ -36,6 +44,10 @@ public class LTerrainEditor : EditorWindow
             if (selected)
                 selectedLoD = i;
         }
+
+        bool genNew = GUILayout.Button("+ Gen New LoD From Selected", GUILayout.ExpandWidth(false));
+        if (genNew) GenFromSelectedLoD();
+
         EditorGUILayout.EndVertical();
 
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
